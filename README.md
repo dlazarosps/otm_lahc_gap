@@ -1,2 +1,4 @@
 # otm_lahc_gap
-Tabalho de Otimização - LACH - GAP
+- Trabalho de Otimização 
+  - Late Acceptance Hill Climbing 
+    - Generalized Assignment Problem
