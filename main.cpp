@@ -1,12 +1,16 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cstring>
-#include <cstdlib>
-#include <stdlib.h>
-#include <math.h>
-#include <ctime>
 #include <algorithm>    // std::copy
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
+#include <fstream>
+#include <iostream>
+#include <math.h>
+#include <string>
+#include <stdlib.h>
+#include <vector>
+
+#include <bits/stdc++.h>
 
 /* Constantes */
 #define DEBUG		1
@@ -23,10 +27,18 @@ int **cost; 		// Cij
 int **resource;		// Aij
 int *capacity;		// Bi
 
-int bestSolution;			// Melhor Solução 	(s*)
-int actualSolution;			// Solução Atual	(s)
-int candidateSolution;		// Solução Atual	(s')
-int *costList;				// Lista de custos	(Lw)
+
+int *currentCapacity;	// Bi corrente
+int **bestMatrix; 		// Matriz melhor solução de combinações (i x j)
+int **candidateMatrix; 	// Matriz candidata solução de combinações (i x j)
+
+int bestSolution;			// Melhor Solução 		(s*)
+int actualSolution;			// Solução Atual		(s)
+int candidateSolution;		// Solução candidata 	(s')
+vector <int> costList;		// Lista de custos		(Lw)
+
+vector <int> indexList;		// Lista de indices das tarefas
+int tasksPerAgent;			// média de tarefas por agentes size(tasks/agents)
 
 
 /* Função para alocar dinamicamente matrizes 2D */
@@ -60,21 +72,61 @@ void print_all(int limit, int listsize){
 
 	cout << " Agents: " << agents << endl;
 	cout << " Tasks: " << tasks << endl;
+	cout << "--------" << endl << endl;
 	
 	cout << " List Size: " << listsize << endl;
 	cout << " Limit: " << limit << endl;
+	cout << "--------" << endl << endl;
 
 	cout << "Cost: " << endl << endl;
 	print_matrix(cost, agents, tasks);
+	cout << "--------" << endl << endl;
 
 	cout << "Resource: " << endl << endl;
 	print_matrix(resource, agents, tasks);
+	cout << "--------" << endl << endl;
 
+	cout << "Capacity: " << endl << endl;
 	for (int i = 0; i < agents; ++i)
 	{
 		cout << capacity[i] << endl;
 	}
+	cout << "--------" << endl << endl;
 
+	cout << "Current Capacity: " << endl << endl;
+	for (int i = 0; i < agents; ++i)
+	{
+		cout << currentCapacity[i] << endl;
+	}
+	cout << "--------" << endl << endl;
+
+	int count = 0;
+	cout << "Current Cost: " << endl << endl;
+	for (int i = 0; i < agents; ++i)
+	{
+		for (int j = 0; j < tasks; ++j)
+		{
+			if(bestMatrix[i][j] == TRUE)
+				count += cost[i][j];
+		}
+	}
+	cout << count << endl  << "--------" << endl << endl;
+
+	cout << "Binary: " << endl << endl;
+	print_matrix(bestMatrix, agents, tasks);
+	cout << "--------" << endl << endl;
+	
+	cout << "index list (" << indexList.size() << "): " << endl << endl;
+	for (int i = 0; i < tasks; ++i)
+	{
+		cout << indexList[i] << " ";
+	}
+	cout << endl << "--------" << endl << endl;
+}
+
+/* Função para resetar capacidade corrente com valores da capacidade original */
+void reset_capacity(){
+	memcpy(&currentCapacity, &capacity, sizeof(capacity)); 
 }
 
 /* Funcão de leitura do arquivo input de instancias usando std::cin */
@@ -97,8 +149,20 @@ void parse_instance(){
 	for(i = 0; i < agents; i++)
 	    resource[i] = new int[tasks];
 
+	// allocate_matrix(bestMatrix, agents, tasks);
+	bestMatrix = new int *[agents];
+	for(i = 0; i < agents; i++)
+	    bestMatrix[i] = new int[tasks];
+
+	// allocate_matrix(candidateMatrix, agents, tasks);
+	candidateMatrix = new int *[agents];
+	for(i = 0; i < agents; i++)
+	    candidateMatrix[i] = new int[tasks];
+
 	//aloca capacidade de cada agente
 	capacity = new int[agents];
+	currentCapacity = new int[agents];
+
 
 	// preenche matrix de custos
 	for (i = 0; i < agents; ++i) 
@@ -127,7 +191,66 @@ void parse_instance(){
 		capacity[i] = stoi(aux);	
 	}
 
+	// preenche matriz com zeros
+	for (int i = 0; i < agents; ++i)
+	{
+		for (int j = 0; j < tasks; ++j)
+		{
+			bestMatrix[i][j] = FALSE;
+			candidateMatrix[i][j] = FALSE;
+		}
+	}
+
+	// incrementa indexList de 0 até n (tasks)
+	for (int j = 0; j < tasks; ++j)
+	{
+		indexList.push_back(j);
+	}
+
+	tasksPerAgent = tasks/agents;
+
+	reset_capacity(); //seta valores da capacidade currente
 }
+
+/* Função para gerar solução inicial randomica */
+void init_solution(){
+
+	int flag = FALSE;
+	int randIndex;
+	int indexTask;
+
+	for (int i = 0; i < agents; ++i)
+	{
+		for (int j = 0; j < tasksPerAgent; ++j)
+		{
+			do
+			{
+
+				randIndex = rand() % indexList.size(); // seleciona indice randomico das tarefas
+
+				if (DEBUG) cout << randIndex << endl;
+	
+				indexTask = indexList[randIndex]; // pega valor do elemento de indice randomico
+
+				if((currentCapacity[i] - resource[i][indexTask]) >= 0){
+
+					bestMatrix[i][indexTask] = TRUE; //seta tarefa j para o agente i
+					currentCapacity[i] -= resource[i][indexTask]; //subitrai a capacidade corrente
+
+					indexList.erase(indexList.begin() + randIndex); // apaga elemento utilizado da lista
+				}
+				else{
+					flag = TRUE;
+				}
+
+			} while (flag);
+
+			
+		}
+	}
+	
+}
+
 
 int main(int argc, char * argv[]){
 
@@ -141,9 +264,11 @@ int main(int argc, char * argv[]){
 	int limit = atoi(argv[1]); 		// critério de parada
 	int listsize = atoi(argv[2]); 	// tamanho da lista (t)
 
-	// costList = new int[listsize]; 	// aloca lista de custos
-
 	parse_instance();
+
+	costList.reserve(listsize); 	// aloca lista de custos
+	
+	init_solution(); // gera solução inicial aleatória
 
 	/* PRINT DEBUG */
 	if (DEBUG)
