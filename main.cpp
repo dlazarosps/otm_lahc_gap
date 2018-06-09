@@ -225,6 +225,7 @@ void init_solution(){
 		{
 			do
 			{
+				srand(time(NULL));
 
 				randIndex = rand() % indexList.size(); // seleciona indice randomico das tarefas
 
@@ -238,12 +239,14 @@ void init_solution(){
 					currentCapacity[i] -= resource[i][indexTask]; //subitrai a capacidade corrente
 
 					indexList.erase(indexList.begin() + randIndex); // apaga elemento utilizado da lista
+
+					flag = FALSE; // pula loop
 				}
 				else{
-					flag = TRUE;
+					flag = TRUE; // caso tenha estourado os recursos repete o procedimento (loop)
 				}
 
-			} while (flag);
+			} while (flag); // enquanto seleciona indices aleatórios
 
 			
 		}
