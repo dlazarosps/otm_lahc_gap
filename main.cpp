@@ -225,7 +225,7 @@ void init_solution(){
 		{
 			do
 			{
-				srand(time(NULL));
+				srand(time(NULL)); // gera semente randomica
 
 				randIndex = rand() % indexList.size(); // seleciona indice randomico das tarefas
 
