@@ -40,6 +40,11 @@ vector <int> costList;		// Lista de custos		(Lw)
 vector <int> indexList;		// Lista de indices das tarefas
 int tasksPerAgent;			// média de tarefas por agentes size(tasks/agents)
 
+int interaction; 	// (i)
+int listIndex; 		// (v)
+
+int limit;  		//critério de parada
+int listSize; 		//tamanho da lista (t)
 
 /* Função para alocar dinamicamente matrizes 2D */
 /*
@@ -52,6 +57,8 @@ void allocate_matrix(int **matrix, int rows, int cols){
 
 }
 */
+
+#define GET_VARIABLE_NAME(Variable) (#Variable)
 
 /* Função para printar matrizes */
 void print_matrix(int **matrix, int rows, int cols){
@@ -68,61 +75,86 @@ void print_matrix(int **matrix, int rows, int cols){
 	}
 }
 
-void print_all(int limit, int listsize){
-
-	cout << " Agents: " << agents << endl;
-	cout << " Tasks: " << tasks << endl;
-	cout << "--------" << endl << endl;
-	
-	cout << " List Size: " << listsize << endl;
-	cout << " Limit: " << limit << endl;
-	cout << "--------" << endl << endl;
-
-	cout << "Cost: " << endl << endl;
-	print_matrix(cost, agents, tasks);
-	cout << "--------" << endl << endl;
-
-	cout << "Resource: " << endl << endl;
-	print_matrix(resource, agents, tasks);
-	cout << "--------" << endl << endl;
-
-	cout << "Capacity: " << endl << endl;
-	for (int i = 0; i < agents; ++i)
-	{
-		cout << capacity[i] << endl;
-	}
-	cout << "--------" << endl << endl;
-
-	cout << "Current Capacity: " << endl << endl;
-	for (int i = 0; i < agents; ++i)
-	{
-		cout << currentCapacity[i] << endl;
-	}
-	cout << "--------" << endl << endl;
-
+/* Função para calcular o custo */
+int calc_cost(int **matrix)
+{
 	int count = 0;
-	cout << "Current Cost: " << endl << endl;
+
 	for (int i = 0; i < agents; ++i)
 	{
 		for (int j = 0; j < tasks; ++j)
 		{
-			if(bestMatrix[i][j] == TRUE)
+			if (matrix[i][j] == TRUE)
 				count += cost[i][j];
 		}
 	}
+
+	return count;
+}
+
+/* Função para printar variáveis */
+void print_all(bool parse){
+
+	string var = GET_VARIABLE_NAME(agents);
+	var[0] = toupper(var[0]);
+	// cout << " Agents: " << agents << endl;
+	cout << " " << var << ": " << agents << endl;
+
+	cout << " Tasks: " << tasks << endl;
+	cout << "--------" << endl << endl;
+
+	cout << " List Size: " << listSize << endl;
+	cout << " Limit: " << limit << endl;
+	cout << "--------" << endl << endl;
+
+	if(parse){
+
+		cout << "Cost: " << endl << endl;
+		print_matrix(cost, agents, tasks);
+		cout << "--------" << endl << endl;
+
+		cout << "Resource: " << endl << endl;
+		print_matrix(resource, agents, tasks);
+		cout << "--------" << endl << endl;
+
+		cout << "Capacity: " << endl << endl;
+		for (int i = 0; i < agents; ++i)
+		{
+			cout << capacity[i] << endl;
+		}
+		cout << "--------" << endl << endl;
+
+		cout << "Current Capacity: " << endl << endl;
+		for (int i = 0; i < agents; ++i)
+		{
+			cout << currentCapacity[i] << endl;
+		}
+		cout << "--------" << endl << endl;
+
+	}
+
+	int count = 0;
+	cout << "bestSolution: " << endl << endl;
+	count = calc_cost(bestMatrix);
 	cout << count << endl  << "--------" << endl << endl;
 
-	cout << "Binary: " << endl << endl;
+	cout << "bestMatrix: " << endl << endl;
 	print_matrix(bestMatrix, agents, tasks);
 	cout << "--------" << endl << endl;
+
+	if(DEBUG && parse){
+
+		cout << "index list (" << indexList.size() << "): " << endl << endl;
+		for (int i = 0; i < tasks; ++i)
+		{
+			cout << indexList[i] << " ";
+		}
+		cout << endl << "--------" << endl << endl; 
+
+	} 
 	
-	cout << "index list (" << indexList.size() << "): " << endl << endl;
-	for (int i = 0; i < tasks; ++i)
-	{
-		cout << indexList[i] << " ";
-	}
-	cout << endl << "--------" << endl << endl;
 }
+
 
 /* Função para resetar capacidade corrente com valores da capacidade original */
 void reset_capacity(){
@@ -229,7 +261,7 @@ void init_solution(){
 
 				randIndex = rand() % indexList.size(); // seleciona indice randomico das tarefas
 
-				if (DEBUG) cout << randIndex << endl;
+				if (DEBUG) cout << randIndex << " - ";
 	
 				indexTask = indexList[randIndex]; // pega valor do elemento de indice randomico
 
@@ -251,7 +283,27 @@ void init_solution(){
 			
 		}
 	}
-	
+
+	if(DEBUG) cout << endl;
+
+	actualSolution = calc_cost(bestMatrix); // s = cost (s)
+}
+
+void init_costList(){
+
+	costList.reserve(listSize); // aloca lista de custos
+
+	for(int i = 0; i < listSize; i++)
+	{
+		costList.push_back(bestSolution);
+	}
+		
+}
+
+void generate_solution(){
+
+	cout << "TO DO" << endl;
+
 }
 
 
@@ -260,25 +312,20 @@ int main(int argc, char * argv[]){
 	if (argc != 3)
 	{
 		/*						 ARGV[0]		ARGV[1]	 	ARGV[2]					CIN							COUT 			   */
-		cerr << " USO CORRETO:	./bin/main 		limit		listsize	<	./instances/gapa-X.txt		>	output/OUT.dat " << endl;
+		cerr << " USO CORRETO:	./bin/main 		limit		listSize	<	./instances/gapa-X.txt		>	output/OUT.dat " << endl;
 		return 0;
 	}
 
-	int limit = atoi(argv[1]); 		// critério de parada
-	int listsize = atoi(argv[2]); 	// tamanho da lista (t)
+	limit = atoi(argv[1]); 		// critério de parada
+	listSize = atoi(argv[2]); 	// tamanho da lista (t)
 
 	parse_instance();
-
-	costList.reserve(listsize); 	// aloca lista de custos
-	
-	init_solution(); // gera solução inicial aleatória
 
 	/* PRINT DEBUG */
 	if (DEBUG)
 	{
-		print_all(limit, listsize);
+		print_all(true);
 	}
-	
 
 	/*** LAHC ***/
 	/*
@@ -298,5 +345,42 @@ int main(int argc, char * argv[]){
 	*	Retorna (s*)
 	*/
 
+
+	init_solution(); // gera solução inicial aleatória
+
+	bestSolution = actualSolution; // (s*) = (s)
+	
+	init_costList(); // preenche lista com o custo de (s)
+
+	interaction = 0; // zera interação (i)
+
+	/* TEST */
+	if(DEBUG){
+		candidateSolution = bestSolution;
+	}
+
+	for(int i = 0; i < limit; i++)
+	{
+		generate_solution();
+		listIndex = interaction % listSize; // (v)
+
+		if ((candidateSolution <= costList[listIndex]) || (candidateSolution <= actualSolution) ) {
+			
+			actualSolution = candidateSolution;
+			
+			if (actualSolution <= bestSolution) {
+				bestSolution = actualSolution;
+			}
+			
+		} 
+
+		costList.pop_back(); // remove ultimo da lista
+		costList.insert(costList.begin(), bestSolution); // insere na frente
+		
+		interaction++;
+	}
+
+	print_all(false);
+	
 	return 0;
 }
