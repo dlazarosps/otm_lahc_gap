@@ -9,6 +9,7 @@
 #include <string>
 #include <stdlib.h>
 #include <vector>
+#include <chrono>
 
 #include <bits/stdc++.h>
 
@@ -18,10 +19,9 @@ int DEBUG;
 #define FALSE		0
 #define ERROR		-1
 
-#define NUM_OPS			3		// Quantidade de operações vizinhos
+#define NUM_OPS			2		// Quantidade de operações vizinhos
 #define COLS_SWAP		0		// Troca tarefa entre agentes (Coluna)
 #define DUO_SWAP		1		// Troca tarefa A => B / B => A
-#define GREEDY			2		// Seleciona a de menor custo daquele agente remove a de maior custo
 
 using namespace std;
 
@@ -343,9 +343,13 @@ void init_solution(){
 		{
 			do
 			{
-				srand(time(NULL)); // gera semente randomica
+				// srand(time(NULL)); // gera semente randomica
+				auto seed = chrono::high_resolution_clock::now().time_since_epoch().count();
+				// mt19937 mt_rand(time(0));
+				mt19937 mt_rand(seed);
 
-				randIndex = rand() % indexList.size(); // seleciona indice randomico das tarefas
+				// randIndex = rand() % indexList.size(); // seleciona indice randomico das tarefas
+				randIndex = mt_rand() % indexList.size(); // seleciona indice randomico das tarefas
 
 				if (DEBUG) cout << randIndex << " - ";
 	
@@ -410,7 +414,7 @@ void list_task(int agent){
 void generate_solution(){
 
 	// cout << "TO DO" << endl;
-	int agent1, agent2, taskIndex, task1, task2, opRandom, flag; // variaveis locais
+	int agent_X, agent_Y, taskIndex, task_A, task_B, opRandom, flag, resource_X, resource_Y; // variaveis locais
 
 	copy_matrix(actualMatrix, candidateMatrix);
 	copy_capacity(actualCapacity, candidateCapacity);
@@ -424,61 +428,61 @@ void generate_solution(){
 	flag = TRUE;	
 	do
 	{
-		srand(time(NULL));
-		opRandom = rand() % NUM_OPS;
+		auto seed = chrono::high_resolution_clock::now().time_since_epoch().count();
+		// mt19937 mt_rand(time(0));
+		mt19937 mt_rand(seed);
+
+		opRandom = mt_rand() % NUM_OPS;
 		
-		srand(time(NULL));
-		agent1 = rand() % agents; // indice do agente UM
+		agent_X = mt_rand() % agents; // indice do agente X
 
-		list_task(agent1);
-		srand(time(NULL));
-		taskIndex = rand() % indexList.size();   // indice da tarefa UM
-		task1 = indexList[taskIndex];
+		list_task(agent_X);
+		taskIndex = mt_rand() % indexList.size();   // indice da tarefa A
+		task_A = indexList[taskIndex];
 
-		srand(time(NULL));
-		agent2 = rand() % agents; // indice do agente DOIS
-		if(agent1 == agent2){
-			if(agent2 == (agents - 1)){
-				agent2 = 0;
+		agent_Y = mt_rand() % agents; // indice do agente Y
+		if(agent_X == agent_Y){
+			if(agent_Y == (agents - 1)){
+				agent_Y = 0;
 			}
 			else{
-				agent2++;
+				agent_Y++;
 			}
 		}
 
-		list_task(agent2);
-		srand(time(NULL));
-		taskIndex = rand() % indexList.size(); // indice da tarefa UM
-		task2 = indexList[taskIndex];
+		list_task(agent_Y);
+		taskIndex = mt_rand() % indexList.size(); // indice da tarefa B
+		task_B = indexList[taskIndex];
 
 
 		if(DEBUG){
 			cout << "--------" << endl << endl;
-			cout << "agent1 " << agent1 << endl;
-			cout << "task1 " << task1 << endl;
-			cout << "agent2 " << agent2 << endl;
-			cout << "task2 " << task2 << endl;
+			cout << "agent_X " << agent_X << endl;
+			cout << "task_A " << task_A << endl;
+			cout << "agent_Y " << agent_Y << endl;
+			cout << "task_B " << task_B << endl;
 			cout << "opRamdom " << opRandom << endl;
 			cout << "--------" << endl << endl;
-			opRandom = COLS_SWAP;
+			// opRandom = COLS_SWAP;
 		}
 		
 
 		switch (opRandom)
 		{
-		case COLS_SWAP: // Troca tarefa entre agentes (Coluna)
+		case COLS_SWAP: // Troca tarefa A entre agentes X e Y (Coluna)
 
 			if(DEBUG) cout << "COLS_SWAP" << endl;
 
-			if (candidateMatrix[agent1][task1] == TRUE){
-				if(DEBUG) cout << "candidate" << endl;
-				if ((candidateCapacity[agent2] - resource[agent2][task1]) >= 0){
-					if(DEBUG) cout << "resource" << endl;
-					candidateMatrix[agent1][task1] = FALSE;			   		// seta tarefa do agent1 para FALSE
-					candidateCapacity[agent1] += resource[agent1][task1]; 		// add a capacidade corrente
+			if (candidateMatrix[agent_X][task_A] == TRUE){
+				// if(DEBUG) cout << "candidate" << endl;
+				if ((candidateCapacity[agent_Y] - resource[agent_Y][task_A]) >= 0){
+					// if(DEBUG) cout << "resource" << endl;
+					
+					candidateMatrix[agent_X][task_A] = FALSE;			   			// seta tarefa do agent_X para FALSE
+					candidateCapacity[agent_X] += resource[agent_X][task_A]; 		// add a capacidade corrente
 
-					candidateMatrix[agent2][task1] = TRUE;					// seta tarefa do agent2 para TRUE
-					candidateCapacity[agent2] -= resource[agent2][task1]; 		// subtrai a capacidade corrente
+					candidateMatrix[agent_Y][task_A] = TRUE;						// seta tarefa do agent_Y para TRUE
+					candidateCapacity[agent_Y] -= resource[agent_Y][task_A]; 		// subtrai a capacidade corrente
 
 					flag = FALSE;
 				}
@@ -486,12 +490,33 @@ void generate_solution(){
 		
 			break;
 
-		case DUO_SWAP: // Troca tarefa no mesmo agente (Linha)
-			// flag = FALSE;
-			break;
+		case DUO_SWAP: // Troca tarefa A do agente X com a tarefa B do agente Y
 
-		case GREEDY: // Seleciona a de menor custo daquele agente remove a de maior custo
-			// flag = FALSE;
+			if(DEBUG) cout << "DUO_SWAP" << endl;
+
+			if (candidateMatrix[agent_X][task_A] == TRUE && candidateMatrix[agent_Y][task_B] == TRUE){
+				// if(DEBUG) cout << "candidate" << endl;
+				
+				// calcula recursos X e Y
+				resource_X = (candidateCapacity[agent_X] - resource[agent_X][task_B] + resource[agent_X][task_A]);
+
+				resource_Y = (candidateCapacity[agent_Y] - resource[agent_Y][task_A] + resource[agent_Y][task_B]);
+				
+				if ( (resource_X >= 0) && (resource_Y >= 0) ){ 		// verifica se respeita a restrição de recursos para ambos agentes
+					// if(DEBUG) cout << "resource" << endl;
+
+					// SWAP A e B
+					candidateMatrix[agent_X][task_A] = FALSE;		// seta tarefa do agent_X para FALSE
+					candidateMatrix[agent_X][task_B] = TRUE;		// seta tarefa do agent_X para TRUE
+					candidateCapacity[agent_X] = resource_X;		// seta a capacidade corrente agent_X
+
+					candidateMatrix[agent_Y][task_A] = TRUE;		// seta tarefa do agent_Y para TRUE
+					candidateMatrix[agent_Y][task_B] = FALSE;		// seta tarefa do agent_Y para FALSE
+					candidateCapacity[agent_Y] = resource_Y;		// seta a capacidade corrente agent_Y
+
+					flag = FALSE;
+				}
+			}
 			break;
 
 		default:
@@ -542,6 +567,8 @@ int main(int argc, char * argv[]){
 	init_solution(); // gera solução inicial aleatória	
 
 	bestSolution = actualSolution; // (s*) = (s)
+
+	int initSolution = bestSolution;
 	
 	init_costList(); // preenche lista com o custo de (s)
 
@@ -559,21 +586,21 @@ int main(int argc, char * argv[]){
 	for(int i = 0; i < limit; i++)
 	
 	{
-		if(DEBUG) cout << "for " << endl;
+		// if(DEBUG) cout << "for " << endl;
 		generate_solution();
 
 		listIndex = interaction % listSize; // (v)
 
 		if ((candidateSolution <= costList[listIndex]) || (candidateSolution <= actualSolution) ) {
 
-			if(DEBUG) cout << "IF s' <= s " << endl;
+			// if(DEBUG) cout << "IF s' <= s " << endl;
 			
 			actualSolution = candidateSolution;
 			copy_matrix(candidateMatrix, actualMatrix);
 			copy_capacity(candidateCapacity, actualCapacity);
 			
 			if (actualSolution <= bestSolution) {
-				if(DEBUG) cout << "IF s <= s* " << endl;
+				// if(DEBUG) cout << "IF s <= s* " << endl;
 				bestSolution = actualSolution;
 				copy_matrix(actualMatrix, bestMatrix);
 			}
@@ -585,9 +612,11 @@ int main(int argc, char * argv[]){
 		
 		interaction++;
 
-		if(DEBUG) cout << "--------" << endl << endl;
+		if(DEBUG) cout << "----"<< interaction << "----" << endl << endl;
 	}
 
+	cout << "Init Solution:  " << initSolution << endl;
+	cout << "--------" << endl << endl;
 	print_solution();
 	
 	return 0;
