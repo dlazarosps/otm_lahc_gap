@@ -19,9 +19,9 @@ int DEBUG;
 #define FALSE		0
 #define ERROR		-1
 
-#define NUM_OPS			2		// Quantidade de operações vizinhos
-#define COLS_SWAP		0		// Troca tarefa entre agentes (Coluna)
-#define DUO_SWAP		1		// Troca tarefa A => B / B => A
+// #define NUM_OPS			2		// Quantidade de operações vizinhos
+// #define COLS_SWAP		0		// Troca tarefa entre agentes (Coluna)
+// #define DUO_SWAP		1		// Troca tarefa A => B / B => A
 
 using namespace std;
 
@@ -34,6 +34,8 @@ int *capacity;		// Bi
 
 int limit;  		//critério de parada
 int listSize; 		//tamanho da lista (t)
+int alpha; 			// parametro de aleatoriedade 
+
 
 int *actualCapacity;	// Bi atual (s)
 int *candidateCapacity;	// Bi candidato (s')
@@ -432,7 +434,8 @@ void generate_solution(){
 		// mt19937 mt_rand(time(0));
 		mt19937 mt_rand(seed);
 
-		opRandom = mt_rand() % NUM_OPS;
+		// opRandom = mt_rand() % NUM_OPS;
+		opRandom = mt_rand() % 100;
 		
 		agent_X = mt_rand() % agents; // indice do agente X
 
@@ -453,6 +456,7 @@ void generate_solution(){
 		list_task(agent_Y);
 		taskIndex = mt_rand() % indexList.size(); // indice da tarefa B
 		task_B = indexList[taskIndex];
+		
 
 
 		if(DEBUG){
@@ -465,13 +469,9 @@ void generate_solution(){
 			cout << "--------" << endl << endl;
 			// opRandom = COLS_SWAP;
 		}
-		
-
-		switch (opRandom)
-		{
-		case COLS_SWAP: // Troca tarefa A entre agentes X e Y (Coluna)
-
-			if(DEBUG) cout << "COLS_SWAP" << endl;
+				
+		if (opRandom <= alpha) {					
+			if(DEBUG) cout << "COLS_SWAP" << endl;		// Troca tarefa A entre agentes X e Y (Coluna)
 
 			if (candidateMatrix[agent_X][task_A] == TRUE){
 				// if(DEBUG) cout << "candidate" << endl;
@@ -487,12 +487,10 @@ void generate_solution(){
 					flag = FALSE;
 				}
 			}
-		
-			break;
-
-		case DUO_SWAP: // Troca tarefa A do agente X com a tarefa B do agente Y
-
-			if(DEBUG) cout << "DUO_SWAP" << endl;
+			
+		}
+		else {
+			if(DEBUG) cout << "DUO_SWAP" << endl;		// Troca tarefa A do agente X com a tarefa B do agente Y
 
 			if (candidateMatrix[agent_X][task_A] == TRUE && candidateMatrix[agent_Y][task_B] == TRUE){
 				// if(DEBUG) cout << "candidate" << endl;
@@ -517,12 +515,7 @@ void generate_solution(){
 					flag = FALSE;
 				}
 			}
-			break;
-
-		default:
-			break;
 		}
-	
 	} while (flag);
 
 	if(DEBUG) cout << "--------" << endl << endl;
@@ -533,16 +526,18 @@ void generate_solution(){
 
 int main(int argc, char * argv[]){
 
-	if (argc < 3 || argc > 4)
+	if (argc < 3 || argc > 5)
 	{
-		/*						 ARGV[0]		ARGV[1]	 	ARGV[2]		ARGV[3]					CIN							COUT 			   */
-		cerr << " USO CORRETO:	./bin/main 		limit		listSize	[debugflag]	 <	./instances/gapa-X.txt		>	output/OUT.dat " << endl;
+		/*						 ARGV[0]		ARGV[1]	 	ARGV[2]		ARGV[3]		ARGV[4]					CIN							COUT 			   */
+		cerr << " USO CORRETO:	./bin/main 		limit		listSize	[alpha]		[debugflag]	 <	./instances/gapa-X.txt		>	output/OUT.dat " << endl;
 		return 0;
 	}
 
 	limit = atoi(argv[1]);		// critério de parada
 	listSize = atoi(argv[2]);   // tamanho da lista (t)
-	DEBUG = atoi(argv[3]);   // tamanho da lista (t)
+	alpha = (NULL == argv[3]) ? 50 : atoi(argv[3]);   // parametro de aleatoridade
+	DEBUG = (NULL == argv[4]) ? 0 : atoi(argv[4]);   // flag de debug
+
 
 	parse_instance();
 
