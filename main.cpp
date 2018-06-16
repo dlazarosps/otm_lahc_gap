@@ -538,6 +538,8 @@ int main(int argc, char * argv[]){
 	alpha = (NULL == argv[3]) ? 50 : atoi(argv[3]);   // parametro de aleatoridade
 	DEBUG = (NULL == argv[4]) ? 0 : atoi(argv[4]);   // flag de debug
 
+	int start_time, stop_time, stop_time2;
+	double diff_time;
 
 	parse_instance();
 
@@ -559,6 +561,8 @@ int main(int argc, char * argv[]){
 	*	Retorna (s*)
 	*/
 
+	start_time = clock();
+
 	init_solution(); // gera solução inicial aleatória	
 
 	bestSolution = actualSolution; // (s*) = (s)
@@ -568,6 +572,7 @@ int main(int argc, char * argv[]){
 	init_costList(); // preenche lista com o custo de (s)
 
 	interaction = 0; // zera interação (i)
+	int interactionStop = interaction;
 
 	/* PRINT DEBUG */
 	if (DEBUG)
@@ -575,12 +580,9 @@ int main(int argc, char * argv[]){
 		print_all();
 	}
 	
-	print_solution();
+	// print_solution();
 
-
-	for(int i = 0; i < limit; i++)
-	
-	{
+	do {
 		// if(DEBUG) cout << "for " << endl;
 		generate_solution();
 
@@ -598,9 +600,26 @@ int main(int argc, char * argv[]){
 				// if(DEBUG) cout << "IF s <= s* " << endl;
 				bestSolution = actualSolution;
 				copy_matrix(actualMatrix, bestMatrix);
+				interactionStop = 0;
+			}
+			else{
+				interactionStop++; // incrementa numero de interações sem atualizar bestSolution
+				stop_time2 = clock();
+
+				diff_time = ((stop_time2 - start_time) / double(CLOCKS_PER_SEC) * 1000) / 1000;
+
+				if (diff_time > 300) { // se tempo de execução maior que 5min STOP
+					cout << endl << "- BREAK TIME -" << endl << endl;
+					break;
+				}
+					
+				if (interactionStop >= 100) { // se passou 100 interações sem alterar o bestSolution STOP
+					cout << endl << "- BREAK INTERACTION -" << endl << endl;
+					break;
+				}
 			}
 			
-		} 
+		}
 
 		costList.pop_back(); // remove ultimo da lista
 		costList.insert(costList.begin(), bestSolution); // insere na frente
@@ -608,11 +627,23 @@ int main(int argc, char * argv[]){
 		interaction++;
 
 		if(DEBUG) cout << "----"<< interaction << "----" << endl << endl;
-	}
+
+	} while (interaction < limit);
+
+	// tempo de execução
+	stop_time = clock();
+	diff_time = ((stop_time - start_time) / double(CLOCKS_PER_SEC)*1000)/1000;
+
+	// data atual
+	time_t now = time(0);
+	char *dt = ctime(&now);
 
 	cout << "Init Solution:  " << initSolution << endl;
 	cout << "--------" << endl << endl;
 	print_solution();
+	print_best();
+	cout << "--------" << endl << endl;
+	cout << "Time: " << diff_time << "s - "<< dt << endl;
 	
 	return 0;
 }
