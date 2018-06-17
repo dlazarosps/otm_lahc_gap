@@ -440,7 +440,7 @@ void generate_solution(){
 		agent_X = mt_rand() % agents; // indice do agente X
 
 		list_task(agent_X);
-		taskIndex = mt_rand() % indexList.size();   // indice da tarefa A
+		taskIndex = mt_rand() % (indexList.size()+ 1);   // indice da tarefa A
 		task_A = indexList[taskIndex];
 
 		agent_Y = mt_rand() % agents; // indice do agente Y
@@ -454,7 +454,7 @@ void generate_solution(){
 		}
 
 		list_task(agent_Y);
-		taskIndex = mt_rand() % indexList.size(); // indice da tarefa B
+		taskIndex = mt_rand() % (indexList.size()+1); // indice da tarefa B
 		task_B = indexList[taskIndex];
 		
 
@@ -538,7 +538,7 @@ int main(int argc, char * argv[]){
 	alpha = (NULL == argv[3]) ? 50 : atoi(argv[3]);   // parametro de aleatoridade
 	DEBUG = (NULL == argv[4]) ? 0 : atoi(argv[4]);   // flag de debug
 
-	int start_time, stop_time, stop_time2;
+	clock_t start_time, stop_time, stop_time2;
 	double diff_time;
 
 	parse_instance();
@@ -613,7 +613,7 @@ int main(int argc, char * argv[]){
 					break;
 				}
 					
-				if (interactionStop >= 100) { // se passou 100 interações sem alterar o bestSolution STOP
+				if (interactionStop >= listSize) { // se passou listSize interações sem alterar o bestSolution STOP
 					cout << endl << "- BREAK INTERACTION -" << endl << endl;
 					break;
 				}
@@ -644,6 +644,22 @@ int main(int argc, char * argv[]){
 	print_best();
 	cout << "--------" << endl << endl;
 	cout << "Time: " << diff_time << "s - "<< dt << endl;
+
+	delete cost;
+	delete resource;
+	delete capacity;
+
+	delete actualCapacity;
+	delete candidateCapacity;
+
+	delete bestMatrix;
+	delete actualMatrix;
+	delete candidateMatrix;
+
+	costList.clear();
+
+	indexList.clear();
+
 	
 	return 0;
 }

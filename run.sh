@@ -1,30 +1,50 @@
 # RUN GAP LAHC SCRIPT
+echo "gapa-1"
+instances="gapa-1.txt"
 
-# Array params
-declare -a arr_inst=("gapa-1.txt" "gapa-2.txt" "gapa-3.txt")
-declare -a arr_limit=(2500 10000 50000 100000 500000)
-declare -a arr_list=(10 20 40 30 50)
-declare -a arr_alpha=(10 30 50 70 90)
-outDir="./output/output"
-count=0
+limit=500000
+alpha=90
+# output="$outDir-limit-$limit-list-$list-alpha-$alpha-in-$instances"
 
-# Compile
-make clean
-make all
-
-# Loop
-for limit in ${arr_limit[@]}; do 
-for list in ${arr_list[@]}; do 
-for alpha in ${arr_alpha[@]}; do 
-for instances in ${arr_inst[@]}
-do
-echo "Run GAP LAHC $count"
-output="$outDir-limit-$limit-list-$list-alpha-$alpha-in-$instances"
-./bin/main $limit $list $alpha < ./instances/$instances > ./output/output
+output="output-limit-500000-list-300-alpha-10-in-$instances"
+./bin/main 500000 300 10 < ./instances/$instances > ./output/$output
 echo $output
-cp $outDir $output
-((count++))
-done
-done
-done
-done
+
+output="output-limit-500000-list-300-alpha-30-in-$instances"
+./bin/main 500000 300 30 < ./instances/$instances > ./output/$output
+echo $output
+
+output="output-limit-500000-list-1000-alpha-70-in-$instances"
+./bin/main 500000 1000 70 < ./instances/$instances > ./output/$output
+echo $output
+
+list=50
+output="output-limit-$limit-list-$list-alpha-$alpha-in-$instances"
+./bin/main $limit $list $alpha < ./instances/$instances > ./output/$output
+echo $output
+
+list=100
+output="output-limit-$limit-list-$list-alpha-$alpha-in-$instances"
+./bin/main $limit $list $alpha < ./instances/$instances > ./output/$output
+echo $output
+
+list=200
+output="output-limit-$limit-list-$list-alpha-$alpha-in-$instances"
+./bin/main $limit $list $alpha < ./instances/$instances > ./output/$output
+echo $output
+
+list=300
+output="output-limit-$limit-list-$list-alpha-$alpha-in-$instances"
+./bin/main $limit $list $alpha < ./instances/$instances > ./output/$output
+echo $output
+
+list=500
+output="output-limit-$limit-list-$list-alpha-$alpha-in-$instances"
+./bin/main $limit $list $alpha < ./instances/$instances > ./output/$output
+echo $output
+
+list=1000
+output="output-limit-$limit-list-$list-alpha-$alpha-in-$instances"
+./bin/main $limit $list $alpha < ./instances/$instances > ./output/$output
+echo $output
+
