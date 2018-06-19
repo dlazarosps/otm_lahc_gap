@@ -2,9 +2,9 @@
 
 # Array params
 declare -a arr_inst=("gapa-1.txt" "gapa-2.txt" "gapa-3.txt")
-declare -a arr_limit=(500000 750000 1000000)
+declare -a arr_limit=(500000 750000 1000000 5000000 10000000 100000000)
 declare -a arr_alpha=(10 30 50 70 90)
-declare -a arr_list=(50 100 200 500 1000)
+declare -a arr_list=(50 100 200 500 1000 2000)
 outDir="./output/output"
 count=0
 
