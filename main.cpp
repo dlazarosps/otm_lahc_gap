@@ -18,6 +18,7 @@ int DEBUG;
 #define TRUE		1
 #define FALSE		0
 #define ERROR		-1
+#define TIMEOUT		43200
 
 // #define NUM_OPS			2		// Quantidade de operações vizinhos
 // #define COLS_SWAP		0		// Troca tarefa entre agentes (Coluna)
@@ -226,7 +227,7 @@ int calc_cost(int **matrix){
 }
 /* Função para copiar um array para outro */
 void copy_capacity(int* from, int* to){
-	memcpy(&to, &from, sizeof(from)); 
+	memcpy(to, from, agents*sizeof(int)); 
 }
 
 /* Função para inicializar vetor de indices de tarefas */
@@ -241,7 +242,7 @@ void init_listIndex(){
 /* Função para copiar bestMatrix para candidateMatrix */
 void copy_matrix(int **from, int **to){
 	
-	memcpy(&to, &from, sizeof(from));
+	memcpy(to, from, agents*tasks*sizeof(int));
 	
 }
 
@@ -320,13 +321,32 @@ void parse_instance(){
 	{
 		for (int j = 0; j < tasks; ++j)
 		{
-			bestMatrix[i][j] = FALSE;
-			actualMatrix[i][j] = FALSE;
-			candidateMatrix[i][j] = FALSE;
+			if (DEBUG){ // copia melhor solução via input
+				cin >> aux;
+				bestMatrix[i][j] = stoi(aux);
+				actualMatrix[i][j] = stoi(aux);
+				// candidateMatrix[i][j] = stoi(aux);
+
+				if(stoi(aux) == 1){
+					actualCapacity[i] -= resource[i][j];
+					candidateCapacity[i] -= resource[i][j];
+				}
+			}
+			else{
+				bestMatrix[i][j] = FALSE;
+				actualMatrix[i][j] = FALSE;
+				candidateMatrix[i][j] = FALSE;
+			}
 		}
 	}
 
 	init_listIndex();
+
+	if (DEBUG){
+		bestSolution = calc_cost(bestMatrix);
+		actualSolution = bestSolution;
+		// candidateSolution = actualSolution;
+	}
 
 	tasksPerAgent = tasks/agents;
 
@@ -563,7 +583,9 @@ int main(int argc, char * argv[]){
 
 	start_time = clock();
 
-	init_solution(); // gera solução inicial aleatória	
+	if(!DEBUG){
+		init_solution(); // gera solução inicial aleatória	
+	}
 
 	bestSolution = actualSolution; // (s*) = (s)
 
@@ -577,11 +599,16 @@ int main(int argc, char * argv[]){
 	/* PRINT DEBUG */
 	if (DEBUG)
 	{
+		copy_matrix(actualMatrix, candidateMatrix);
+		copy_capacity(actualCapacity, candidateCapacity);
+		candidateSolution = calc_cost(candidateMatrix);
 		print_all();
 	}
 	
 	// print_solution();
+	int flag  = TRUE;
 
+	
 	do {
 		// if(DEBUG) cout << "for " << endl;
 		generate_solution();
@@ -604,31 +631,38 @@ int main(int argc, char * argv[]){
 			}
 			else{
 				interactionStop++; // incrementa numero de interações sem atualizar bestSolution
-				stop_time2 = clock();
-
-				diff_time = ((stop_time2 - start_time) / double(CLOCKS_PER_SEC) * 1000) / 1000;
-
-				if (diff_time > 300) { // se tempo de execução maior que 5min STOP
-					cout << endl << "- BREAK TIME -" << endl << endl;
-					break;
-				}
 					
-				if (interactionStop >= listSize) { // se passou listSize interações sem alterar o bestSolution STOP
+				if (interactionStop >= 2*listSize) { // se passou listSize interações sem alterar o bestSolution STOP
 					cout << endl << "- BREAK INTERACTION -" << endl << endl;
-					break;
+					flag = FALSE;
+					// break;
 				}
 			}
 			
+		}
+
+		stop_time2 = clock();
+		diff_time = ((stop_time2 - start_time) / double(CLOCKS_PER_SEC) * 1000) / 1000;
+		if (diff_time > TIMEOUT) { // se tempo de execução maior que TIMEOUT -> STOP
+			cout << endl << "- BREAK TIME -" << endl << endl;
+			flag = FALSE;
+			// break;
 		}
 
 		costList.pop_back(); // remove ultimo da lista
 		costList.insert(costList.begin(), bestSolution); // insere na frente
 		
 		interaction++;
-
 		if(DEBUG) cout << "----"<< interaction << "----" << endl << endl;
+		
+		if (interaction > limit)
+		{
+			flag = FALSE;
+		}
 
-	} while (interaction < limit);
+
+	// } while (interaction < limit);
+	} while (flag);
 
 	// tempo de execução
 	stop_time = clock();
