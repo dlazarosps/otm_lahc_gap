@@ -320,7 +320,7 @@ void parse_instance(){
 	for (int i = 0; i < agents; ++i)
 	{
 		for (int j = 0; j < tasks; ++j)
-		{
+		{/*
 			if (DEBUG){ // copia melhor solução via input
 				cin >> aux;
 				bestMatrix[i][j] = stoi(aux);
@@ -331,22 +331,23 @@ void parse_instance(){
 					actualCapacity[i] -= resource[i][j];
 					candidateCapacity[i] -= resource[i][j];
 				}
-			}
-			else{
+			}*/
+			// else{
 				bestMatrix[i][j] = FALSE;
 				actualMatrix[i][j] = FALSE;
 				candidateMatrix[i][j] = FALSE;
-			}
+			// }
 		}
 	}
 
 	init_listIndex();
-
+	/*
 	if (DEBUG){
 		bestSolution = calc_cost(bestMatrix);
 		actualSolution = bestSolution;
 		// candidateSolution = actualSolution;
 	}
+	*/
 
 	tasksPerAgent = tasks/agents;
 
@@ -583,9 +584,9 @@ int main(int argc, char * argv[]){
 
 	start_time = clock();
 
-	if(!DEBUG){
+	// if(!DEBUG){
 		init_solution(); // gera solução inicial aleatória	
-	}
+	// }
 
 	bestSolution = actualSolution; // (s*) = (s)
 
